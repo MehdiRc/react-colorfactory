@@ -1,0 +1,1423 @@
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+  overflow: hidden;
+}
+
+/* Reset body/html margins */
+body,
+html {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Top bar */
+#app {
+  padding: 4px 8px;
+  background: #ddd;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  overflow: hidden;
+  position: relative;
+  z-index: 750;
+}
+
+/* Normalized button styles */
+button {
+  padding: 6px 12px;
+  min-width: 120px;
+  height: 32px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #4caf50;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Specific widths for buttons with changing text */
+#simpleModeToggle {
+  min-width: 200px;
+}
+
+#linksVisibilityToggle {
+  min-width: 160px;
+}
+
+#hoverHighlightToggle {
+  min-width: 180px;
+}
+
+#previewColorsToggle {
+  min-width: 160px;
+}
+
+#eraserTool {
+  min-width: 160px;
+}
+
+/* File input button */
+.file-input-button {
+  padding: 6px 12px;
+  min-width: 140px;
+  height: 32px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #4caf50;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Button groups */
+.button-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  border-right: 2px solid #ccc;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.button-group:last-child {
+  border-right: none;
+}
+
+/* Material Icons in buttons */
+.material-icons {
+  font-size: 16px;
+  margin-right: 6px;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+/* Slider container */
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.slider-container label {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.slider-container .material-icons {
+  margin-right: 4px;
+}
+
+#thresholdValue {
+  min-width: 36px;
+  text-align: right;
+  font-weight: 500;
+}
+
+/* Workspace */
+#workspace {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 72px);
+  border: 2px solid #ccc;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* The SVG for lines */
+#connections {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+line,
+text {
+  pointer-events: auto;
+}
+
+/* Modal for K-means preview */
+#previewModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 850;
+  padding: 20px;
+}
+
+#previewModalContent {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 500px;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 851;
+}
+
+/* Fixed header section */
+#previewModalContent h3 {
+  margin: 0 0 16px 0;
+}
+
+.slider-container {
+  margin-bottom: 16px;
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+/* Scrollable color squares section */
+#previewColors {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 100px;
+  max-height: calc(90vh - 200px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 10px;
+  margin: 10px -10px;
+}
+
+/* Button container */
+#previewModalContent > div:last-child {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.colorSquare {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #000;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+#hoverHighlightToggle:hover {
+  opacity: 0.9;
+}
+
+#linksVisibilityToggle:hover {
+  opacity: 0.9;
+}
+
+/* Add these styles */
+.node {
+  position: absolute;
+  transition: box-shadow 0.2s ease-out;
+}
+
+.links-hidden .node {
+  cursor: move !important; /* Override any other cursor settings when links are hidden */
+}
+
+/* Drag and drop styles */
+.drag-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(33, 150, 243, 0.15);
+  border: 3px dashed #2196F3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.drag-message {
+  background-color: white;
+  padding: 20px 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.drag-message span {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  color: #2196F3;
+  margin-bottom: 8px;
+}
+
+.drag-message small {
+  display: block;
+  color: #666;
+}
+
+.dragging-over {
+  outline: none;
+}
+
+/* Empty workspace styles */
+.empty-workspace {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.02);
+  pointer-events: none;
+}
+
+.empty-message {
+  background-color: white;
+  padding: 20px 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  border: 2px dashed #ccc;
+}
+
+.empty-message span {
+  display: block;
+  font-size: 24px;
+  font-weight: bold;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.empty-message small {
+  display: block;
+  color: #999;
+}
+
+/* File input button styling */
+#fileInput {
+  display: none;
+}
+
+.file-input-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.file-input-button:hover {
+  opacity: 0.9;
+}
+
+/* Icon styles */
+button i {
+  margin-right: 6px;
+}
+
+.slider-container i {
+  margin-right: 6px;
+}
+
+/* Material Icons styles */
+button .material-icons {
+  margin-right: 6px;
+}
+
+/* Toggle Switch styles */
+.toggle-switch {
+  padding: 6px 12px 6px 52px !important;
+  position: relative;
+  text-align: left;
+  min-width: 160px;
+  background-color: #666 !important;
+  transition: all 0.3s ease;
+}
+
+.toggle-switch.active {
+  background-color: #4CAF50 !important;
+}
+
+/* Switch track */
+.toggle-switch::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+/* Switch thumb */
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.active::after {
+  left: 26px;
+}
+
+/* Icon in toggle switch */
+.toggle-switch .material-icons {
+  font-size: 16px;
+  margin-right: 8px;
+  transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.toggle-switch:hover::before {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Override toggle switch active color for eraser */
+#eraserTool.toggle-switch.active {
+  background-color: #dc3545 !important;
+}
+
+/* Cursor styles for eraser mode */
+#workspace.eraser-active {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath fill='%23dc3545' stroke='black' stroke-width='0.5' d='M20 5L19 4L12 11L5 4L4 5L11 12L4 19L5 20L12 13L19 20L20 19L13 12z'/%3E%3C/svg%3E") 16 16, auto;
+}
+
+#workspace.eraser-active .node {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath fill='%23dc3545' stroke='black' stroke-width='0.5' d='M20 5L19 4L12 11L5 4L4 5L11 12L4 19L5 20L12 13L19 20L20 19L13 12z'/%3E%3C/svg%3E") 16 16, auto;
+}
+
+/* Export button */
+#exportButton {
+  min-width: 140px;
+}
+
+/* Add Node button */
+#addNode {
+  min-width: 120px;
+}
+
+/* Clear Board button */
+#clearBoard {
+  min-width: 140px;
+}
+
+/* Update the responsive styles */
+@media screen and (max-width: 1200px) {
+  #app {
+    height: 56px;
+    padding: 8px;
+    display: flex;
+    flex-wrap: nowrap; /* Keep everything on one line */
+    gap: 8px;
+    overflow-x: auto; /* Allow horizontal scroll if needed */
+  }
+
+  .button-group {
+    flex-shrink: 0; /* Prevent button groups from shrinking */
+    border-right: 2px solid #ccc;
+    padding: 0 8px;
+    height: 40px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* When space gets tight, shrink buttons first */
+  button, 
+  .file-input-button,
+  #simpleModeToggle,
+  #linksVisibilityToggle,
+  #hoverHighlightToggle,
+  #previewColorsToggle,
+  #eraserTool {
+    min-width: 120px; /* Start with normal width */
+    transition: all 0.3s ease;
+  }
+}
+
+/* Update the media query for small screens */
+@media screen and (max-width: 768px) {
+  /* Only target top bar buttons, not drawer buttons */
+  #app button, 
+  #app .file-input-button {
+    min-width: 40px !important;
+    width: 40px;
+    padding: 6px;
+    font-size: 0; /* Hide text */
+  }
+
+  /* Special handling for toggle buttons in icon mode */
+  #app .toggle-switch {
+    position: relative;
+    width: 80px !important;
+    min-width: 80px !important;
+    padding: 6px 12px !important;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  /* Keep the switch track for all toggle buttons */
+  #app .toggle-switch::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 20px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+  }
+
+  /* Keep the switch thumb for all toggle buttons */
+  #app .toggle-switch::after {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Move thumb when active for all toggle buttons */
+  #app .toggle-switch.active::after {
+    transform: translate(24px, -50%);
+  }
+
+  /* Hide only the text */
+  #app .toggle-switch span:not(.material-icons) {
+    display: none;
+  }
+
+  #app .toggle-switch .material-icons {
+    margin-left: 48px;
+    margin-right: 0;
+  }
+
+  /* Keep drawer buttons normal */
+  .settings-drawer button {
+    min-width: 100% !important;
+    width: 100% !important;
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+  }
+
+  .settings-drawer .material-icons {
+    margin-right: 8px !important;
+    font-size: 16px !important;
+  }
+
+  /* Keep close button small */
+  .settings-drawer .close-drawer {
+    min-width: 32px !important;
+    width: 32px !important;
+    padding: 4px !important;
+  }
+
+  .settings-drawer .close-drawer .material-icons {
+    margin-right: 0 !important;
+  }
+}
+
+/* Adjust workspace height */
+#workspace {
+  height: calc(100% - 72px) !important; /* Fixed height since toolbar is single line */
+}
+
+/* Add these styles for the settings drawer */
+.settings-drawer {
+  position: fixed;
+  top: 0;
+  right: -300px;
+  width: 300px;
+  height: 100vh;
+  background-color: white;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s ease;
+  z-index: 800;
+}
+
+.settings-drawer.open {
+  right: 0;
+}
+
+.close-drawer {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  min-width: auto !important;
+  width: 32px !important;
+  height: 32px;
+  padding: 4px !important;
+  background: none !important;
+  color: #666 !important;
+}
+
+.close-drawer:hover {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.drawer-content {
+  padding: 20px;
+  padding-top: 60px;
+}
+
+.drawer-content h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+}
+
+.settings-group {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.settings-group:last-child {
+  border-bottom: none;
+}
+
+/* Settings toggle button */
+#settingsToggle {
+  min-width: 40px !important;
+  width: 40px;
+  padding: 6px;
+  background-color: #666;
+}
+
+#settingsToggle .material-icons {
+  margin: 0;
+}
+
+/* Make drawer buttons full width */
+.settings-group .toggle-switch {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 480px) {
+  .settings-drawer {
+    width: 100%;
+    right: -100%;
+  }
+}
+
+/* Add these styles for the contrast control in the drawer */
+.contrast-control {
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.contrast-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.contrast-header label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.contrast-header .material-icons {
+  margin-right: 8px;
+}
+
+.contrast-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: #2196F3;
+}
+
+.contrast-control input[type="range"] {
+  width: 100%;
+  margin: 8px 0;
+}
+
+.contrast-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+/* Add these styles for the color variations control */
+.color-variations-control {
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.color-variations-control h4 {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.variation-slider {
+  margin-bottom: 16px;
+}
+
+.variation-slider:last-child {
+  margin-bottom: 0;
+}
+
+.variation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.variation-header label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #333;
+}
+
+.variation-header .material-icons {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.variation-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #2196F3;
+}
+
+.variation-slider input[type="range"] {
+  width: 100%;
+  margin: 4px 0;
+}
+
+/* Add these styles for the variations header and link switch */
+.variations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.variations-header h4 {
+  margin: 0;
+}
+
+.link-switch {
+  min-width: 32px !important;
+  width: 32px !important;
+  height: 32px !important;
+  padding: 4px !important;
+  background: none !important;
+  color: #666 !important;
+  border-radius: 50% !important;
+}
+
+.link-switch:hover {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.link-switch.active {
+  color: #2196F3 !important;
+}
+
+.link-switch .material-icons {
+  margin: 0 !important;
+  font-size: 20px !important;
+}
+
+/* Add styles for panning */
+#workspace.panning {
+  cursor: grabbing !important;
+}
+
+#workspace.panning * {
+  cursor: grabbing !important;
+}
+
+#workspace.panning .node {
+  transition: none !important;
+}
+
+#workspace.panning #connections line {
+  transition: none !important;
+}
+
+/* Add these styles for the help button */
+.help-button {
+  width: 100%;
+  background-color: #2196F3 !important;
+  color: white;
+  padding: 12px !important;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.help-button:hover {
+  background-color: #1976D2 !important;
+}
+
+.help-button .material-icons {
+  font-size: 20px;
+}
+
+/* Dark mode styles */
+.dark-mode {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+/* Top bar dark mode */
+.dark-mode #app {
+  background-color: #2d2d2d;
+  border-bottom: 1px solid #404040;
+}
+
+/* Workspace dark mode */
+.dark-mode #workspace {
+  background-color: #1a1a1a;
+  border-color: #404040;
+}
+
+/* Node dark mode */
+.dark-mode .node {
+  background-color: #2d2d2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .node:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .title-input {
+  background-color: rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+}
+
+.dark-mode .title-input:focus {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .color-controls {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .color-slider label,
+.dark-mode .color-slider .value,
+.dark-mode .hex-input label {
+  color: #b0b0b0;
+}
+
+.dark-mode .hex-input input {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-color: #404040;
+  color: #ffffff;
+}
+
+.dark-mode .hex-input input:focus {
+  border-color: #666;
+}
+
+/* Settings drawer dark mode */
+.dark-mode .settings-drawer {
+  background-color: #2d2d2d;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .drawer-content h3 {
+  color: #ffffff;
+}
+
+.dark-mode .settings-group {
+  border-bottom-color: #404040;
+}
+
+.dark-mode .contrast-control,
+.dark-mode .color-variations-control {
+  background-color: #222;
+}
+
+.dark-mode .contrast-header label,
+.dark-mode .variation-header label {
+  color: #ffffff;
+}
+
+.dark-mode .contrast-value,
+.dark-mode .variation-value {
+  color: #ffffff !important;
+}
+
+.dark-mode .contrast-labels {
+  color: #b0b0b0;
+}
+
+.dark-mode .close-drawer {
+  color: #b0b0b0 !important;
+}
+
+.dark-mode .close-drawer:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Button styles in dark mode */
+.dark-mode .toggle-switch:not(.active) {
+  background-color: #404040;
+}
+
+.dark-mode .help-button {
+  background-color: #1976D2 !important;
+}
+
+.dark-mode .help-button:hover {
+  background-color: #1565C0 !important;
+}
+
+/* Slider styles in dark mode */
+.dark-mode input[type="range"] {
+  background-color: #404040;
+}
+
+.dark-mode input[type="range"]::-webkit-slider-thumb {
+  background-color: #64b5f6;
+  border-color: #404040;
+}
+
+/* Modal dark mode */
+.dark-mode .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.dark-mode .help-modal,
+.dark-mode .export-modal {
+  background-color: #2d2d2d;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .help-section {
+  background-color: #222;
+}
+
+.dark-mode .help-section h3 {
+  color: #ffffff;
+}
+
+.dark-mode .help-section li {
+  color: #b0b0b0;
+}
+
+.dark-mode .help-section li strong {
+  color: #ffffff;
+}
+
+/* Empty workspace message dark mode */
+.dark-mode .empty-workspace {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.dark-mode .empty-message {
+  background-color: #2d2d2d;
+  border-color: #404040;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .empty-message span {
+  color: #ffffff;
+}
+
+.dark-mode .empty-message small {
+  color: #b0b0b0;
+}
+
+/* Drag overlay dark mode */
+.dark-mode .drag-overlay {
+  background-color: rgba(33, 150, 243, 0.1);
+  border-color: #1976D2;
+}
+
+.dark-mode .drag-message {
+  background-color: #2d2d2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .drag-message span {
+  color: #64b5f6;
+}
+
+.dark-mode .drag-message small {
+  color: #b0b0b0;
+}
+
+/* Tooltip dark mode */
+.dark-mode .copy-tooltip {
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #ffffff;
+}
+
+/* Update the dark mode styles for Color Variations section */
+.dark-mode .variations-header h4 {
+  color: #ffffff;
+}
+
+.dark-mode .link-switch {
+  color: #ffffff !important;
+}
+
+.dark-mode .link-switch:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark-mode .link-switch.active {
+  color: #64b5f6 !important;
+}
+
+/* Add these styles for the connection text in dark mode */
+.dark-mode #connections text:not([data-from]) {
+  fill: #ffffff !important;
+  stroke: none;
+}
+
+/* Modal Base Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 850;
+}
+
+.modal-content {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 500px;
+  max-width: 90vw;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 851;
+}
+
+.modal-content h2 {
+  margin: 0 0 16px 0;
+  color: #333;
+}
+
+.modal-content p {
+  margin: 0 0 24px 0;
+  color: #666;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-actions button {
+  min-width: 100px;
+  height: 36px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.cancel-button {
+  background-color: #6c757d;
+  color: white;
+}
+
+.danger-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Export Modal Specific Styles */
+.export-modal .export-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.export-modal .option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-modal label {
+  font-size: 14px;
+  color: #666;
+}
+
+.export-modal select,
+.export-modal input[type="text"] {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  color: #333;
+}
+
+.export-modal .preview {
+  margin: 20px 0;
+}
+
+.export-modal .preview pre {
+  background: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 13px;
+  color: #333;
+}
+
+/* Dark Mode Styles */
+.dark-mode .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.dark-mode .modal-content {
+  background-color: #2d2d2d;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .modal-content h2 {
+  color: #ffffff;
+}
+
+.dark-mode .modal-content p {
+  color: #b0b0b0;
+}
+
+.dark-mode .export-modal label {
+  color: #b0b0b0;
+}
+
+.dark-mode .export-modal select,
+.dark-mode .export-modal input[type="text"] {
+  background-color: #1a1a1a;
+  border-color: #404040;
+  color: #ffffff;
+}
+
+.dark-mode .export-modal select:focus,
+.dark-mode .export-modal input[type="text"]:focus {
+  border-color: #666;
+}
+
+.dark-mode .export-modal .preview pre {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid #404040;
+}
+
+.dark-mode .export-modal .option-group input[type="checkbox"] {
+  accent-color: #2196F3;
+}
+
+.dark-mode .cancel-button {
+  background-color: #4a4a4a;
+}
+
+.dark-mode .cancel-button:hover {
+  background-color: #5a5a5a;
+}
+
+.dark-mode .danger-button {
+  background-color: #c82333;
+}
+
+.dark-mode .danger-button:hover {
+  background-color: #dc3545;
+}
+
+/* Modal Animations */
+.modal-overlay {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* K-means modal dark mode styles */
+.dark-mode #previewModal {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.dark-mode #previewModalContent {
+  background-color: #2d2d2d;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode #previewModalContent h3 {
+  color: #ffffff;
+}
+
+.dark-mode #previewModalContent .slider-container {
+  color: #b0b0b0;
+}
+
+.dark-mode #previewModalContent input[type="range"] {
+  background-color: #404040;
+}
+
+.dark-mode #previewModalContent input[type="range"]::-webkit-slider-thumb {
+  background-color: #64b5f6;
+  border-color: #404040;
+}
+
+.dark-mode #previewModalContent #modalMaxColorsVal {
+  color: #ffffff;
+}
+
+.dark-mode #previewModalContent .colorSquare {
+  border-color: #404040;
+}
+
+.dark-mode #previewModalContent #addColorsBtn {
+  background-color: #1976D2;
+  color: #ffffff;
+}
+
+.dark-mode #previewModalContent #addColorsBtn:hover {
+  background-color: #1565C0;
+}
+
+/* K-means modal responsive styles */
+#previewModal {
+  padding: 20px;
+}
+
+#previewModalContent {
+  width: 500px;
+  max-width: 90vw;
+}
+
+#previewColors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.colorSquare {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+@media screen and (max-width: 480px) {
+  #previewModalContent {
+    padding: 16px;
+  }
+
+  #previewModalContent h3 {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .slider-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 12px;
+    padding: 10px;
+  }
+
+  #modalMaxColorsVal {
+    align-self: flex-end;
+  }
+
+  #previewColors {
+    max-height: calc(90vh - 220px);
+    padding: 8px;
+    margin: 8px -8px;
+  }
+
+  .colorSquare {
+    width: 32px;
+    height: 32px;
+  }
+
+  #addColorsBtn {
+    width: 100%;
+  }
+}
+
+@media screen and (max-width: 320px) {
+  #previewModalContent {
+    padding: 12px;
+  }
+
+  .slider-container {
+    padding: 8px;
+  }
+
+  #previewColors {
+    padding: 6px;
+    margin: 6px -6px;
+  }
+
+  .colorSquare {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Dark mode specific updates */
+.dark-mode .slider-container {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode #previewModalContent > div:last-child {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Z-index layering system - update values to ensure proper stacking */
+
+/* Workspace layers */
+#workspace {
+  position: relative;
+  z-index: 1;
+}
+
+#connections {
+  position: absolute;
+  z-index: 2;
+}
+
+/* Node z-index is handled dynamically through the style prop */
+.node {
+  position: absolute;
+  transition: box-shadow 0.2s ease-out;
+}
+
+/* Topbar */
+#app {
+  position: relative;
+  z-index: 750;
+}
+
+/* Settings drawer */
+.settings-drawer {
+  position: fixed;
+  z-index: 800;
+}
+
+/* Modal layers */
+.modal-overlay {
+  position: fixed;
+  z-index: 850;
+}
+
+/* Help modal */
+.help-modal {
+  position: relative;
+  z-index: 850;
+}
+
+/* Modal content */
+.modal-content,
+#previewModal,
+.export-modal {
+  position: relative;
+  z-index: 851;
+}
+
+/* Keep shadow effect for dragging */
+.node.dragging {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .node.dragging {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
