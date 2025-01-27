@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Node } from "../types";
 import "./Cnode.css";
 
@@ -24,9 +24,6 @@ interface CnodeProps {
   darknessPercentage: number;
   style?: React.CSSProperties;
   isDragging: boolean;
-  onTouchStart?: (e: React.TouchEvent, id: string) => void;
-  onTouchMove?: (e: React.TouchEvent, id: string) => void;
-  onTouchEnd?: (e: React.TouchEvent, id: string) => void;
 }
 
 // Helper function to lighten a hex color by percentage
@@ -196,9 +193,6 @@ const Cnode: React.FC<CnodeProps> = ({
   darknessPercentage,
   style,
   isDragging,
-  onTouchStart,
-  onTouchMove,
-  onTouchEnd,
 }) => {
   const opacity = getNodeOpacity(node.id);
 
@@ -390,45 +384,6 @@ const Cnode: React.FC<CnodeProps> = ({
     changeNodeColor(node.id, newHex, true, oldColor);
   };
 
-  // Add touch handling state
-  const [touchStartTime, setTouchStartTime] = useState<number>(0);
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
-  const [isTouching, setIsTouching] = useState(false);
-
-  // Add touch event handlers
-  const handleTouchStart = (e: React.TouchEvent) => {
-    e.stopPropagation();
-    
-    if (onTouchStart) {
-      onTouchStart(e, node.id);
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    e.stopPropagation();
-    
-    if (onTouchMove) {
-      onTouchMove(e, node.id);
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    e.stopPropagation();
-    
-    if (onTouchEnd) {
-      onTouchEnd(e, node.id);
-    }
-  };
-
-  // Add cleanup effect
-  useEffect(() => {
-    return () => {
-      if (longPressTimer) {
-        clearTimeout(longPressTimer);
-      }
-    };
-  }, [longPressTimer]);
-
   return (
     <div
       key={node.id}
@@ -442,7 +397,6 @@ const Cnode: React.FC<CnodeProps> = ({
         minHeight: simpleMode ? '60px' : '180px',
         width: simpleMode ? '180px' : '220px',
         ...style,
-        touchAction: 'none'
       }}
       onMouseEnter={() => {
         // Clear any existing timeout
@@ -472,9 +426,6 @@ const Cnode: React.FC<CnodeProps> = ({
         onMouseDownNode(e, node.id);
       }}
       onContextMenu={(e) => onMouseDownRight(e, node.id)}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
       <div className="node-header">
         <input

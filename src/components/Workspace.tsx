@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Cnode from "./Cnode";
 import ConnectionsLayer from "./ConnectionsLayer";
 import { Node, Connection, DraggingLine, UndoAction } from "../types";
@@ -35,16 +35,6 @@ interface WorkspaceProps {
   darknessPercentage: number;
   isDarkMode?: boolean;
   setUndoStack: React.Dispatch<React.SetStateAction<UndoAction[]>>;
-}
-
-interface TouchState {
-  startX: number;
-  startY: number;
-  lastX: number;
-  lastY: number;
-  isMoving: boolean;
-  nodeId: string | null;
-  startTime: number;
 }
 
 const Workspace: React.FC<WorkspaceProps> = ({
@@ -104,18 +94,8 @@ const Workspace: React.FC<WorkspaceProps> = ({
   // Add state to track the last dragged node
   const [lastDraggedNodeId, setLastDraggedNodeId] = useState<string | null>(null);
 
-  const [touchState, setTouchState] = useState<TouchState>({
-    startX: 0,
-    startY: 0,
-    lastX: 0,
-    lastY: 0,
-    isMoving: false,
-    nodeId: null,
-    startTime: 0
-  });
-
-  // Add long press timer ref
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Add this state near the other state declarations
+  const [showMobileWarning, setShowMobileWarning] = useState(false);
 
   // Add this effect to update workspace size
   React.useEffect(() => {
@@ -135,6 +115,14 @@ const Workspace: React.FC<WorkspaceProps> = ({
     return () => {
       window.removeEventListener('resize', updateSize);
     };
+  }, []);
+
+  // Add this effect to detect mobile devices and show warning
+  useEffect(() => {
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobileDevice) {
+      setShowMobileWarning(true);
+    }
   }, []);
 
   // Handler for preview colors
@@ -310,130 +298,6 @@ const Workspace: React.FC<WorkspaceProps> = ({
     }
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = workspaceRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const target = e.target as HTMLElement;
-    const nodeElement = target.closest('.node');
-    const nodeId = nodeElement?.getAttribute('data-id') || null;
-
-    const touchX = touch.clientX - rect.left;
-    const touchY = touch.clientY - rect.top;
-
-    setTouchState({
-      startX: touchX,
-      startY: touchY,
-      lastX: touchX,
-      lastY: touchY,
-      isMoving: false,
-      nodeId,
-      startTime: Date.now()
-    });
-
-    if (nodeId) {
-      // Focus the node immediately
-      updateNodeInteraction(nodeId);
-      setDraggedNodeId(nodeId);
-
-      // Start long press timer
-      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = setTimeout(() => {
-        if (!touchState.isMoving) {
-          onMouseDownRight(e as any, nodeId);
-        }
-      }, 500);
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = workspaceRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const currentX = touch.clientX - rect.left;
-    const currentY = touch.clientY - rect.top;
-    const deltaX = currentX - touchState.lastX;
-    const deltaY = currentY - touchState.lastY;
-
-    // Check if movement is significant
-    const isSignificantMove = Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3;
-
-    if (isSignificantMove) {
-      // Clear long press timer
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-        longPressTimerRef.current = null;
-      }
-
-      if (touchState.nodeId) {
-        // Move node
-        setNodes(prev => prev.map(node => {
-          if (node.id === touchState.nodeId) {
-            return {
-              ...node,
-              x: node.x + deltaX,
-              y: node.y + deltaY
-            };
-          }
-          return node;
-        }));
-      } else {
-        // Pan workspace
-        setNodes(prev => prev.map(node => ({
-          ...node,
-          x: node.x + deltaX,
-          y: node.y + deltaY
-        })));
-      }
-
-      setTouchState(prev => ({
-        ...prev,
-        lastX: currentX,
-        lastY: currentY,
-        isMoving: true
-      }));
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    e.preventDefault();
-    
-    // Clear long press timer
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-
-    const touchDuration = Date.now() - touchState.startTime;
-
-    if (!touchState.isMoving && touchDuration < 200) {
-      // Quick tap
-      if (touchState.nodeId) {
-        highlightNode(touchState.nodeId);
-      }
-    }
-
-    setDraggedNodeId(null);
-    setTouchState(prev => ({
-      ...prev,
-      isMoving: false,
-      nodeId: null
-    }));
-  };
-
-  // Add cleanup effect for long press timer
-  useEffect(() => {
-    return () => {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-      }
-    };
-  }, []);
-
   // Sort nodes by lastInteracted time before rendering
   const sortedNodes = [...nodes].sort((a, b) => {
     const timeA = a.lastInteracted || 0;
@@ -448,15 +312,7 @@ const Workspace: React.FC<WorkspaceProps> = ({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      style={{ 
-        cursor: isPanning ? 'grabbing' : 'default',
-        touchAction: 'none',
-        overscrollBehavior: 'none',
-        WebkitOverflowScrolling: 'touch'
-      }}
+      style={{ cursor: isPanning ? 'grabbing' : 'default' }}
       className={`
         ${!linksVisible ? 'links-hidden' : ''} 
         ${isDraggingOver ? 'dragging-over' : ''} 
@@ -549,6 +405,21 @@ const Workspace: React.FC<WorkspaceProps> = ({
           style={{ opacity: 0.7 }} // Make it semi-transparent while dragging
           isDragging={draggedNodeId === clonedNode.id}
         />
+      )}
+
+      {showMobileWarning && (
+        <div className="mobile-warning-overlay">
+          <div className="mobile-warning-content">
+            <h3>Desktop Only Tool</h3>
+            <p>This color tool is designed for desktop use with a mouse. Touch input is not fully supported.</p>
+            <button 
+              onClick={() => setShowMobileWarning(false)}
+              className="warning-close-button"
+            >
+              I understand
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

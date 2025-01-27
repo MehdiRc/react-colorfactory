@@ -1486,3 +1486,90 @@ button .material-icons {
     right: 12px;
   }
 }
+
+/* Mobile warning styles */
+.mobile-warning-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.mobile-warning-content {
+  background-color: white;
+  padding: 24px;
+  border-radius: 8px;
+  max-width: 90%;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-warning-content h3 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.mobile-warning-content p {
+  margin: 0 0 24px 0;
+  color: #666;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.warning-close-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.2s ease;
+}
+
+.warning-close-button:hover {
+  background-color: #45a049;
+}
+
+/* Dark mode styles for the warning */
+.dark-mode .mobile-warning-content {
+  background-color: #2d2d2d;
+}
+
+.dark-mode .mobile-warning-content h3 {
+  color: #ffffff;
+}
+
+.dark-mode .mobile-warning-content p {
+  color: #b0b0b0;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 480px) {
+  .mobile-warning-content {
+    padding: 20px;
+  }
+
+  .mobile-warning-content h3 {
+    font-size: 18px;
+  }
+
+  .mobile-warning-content p {
+    font-size: 14px;
+  }
+
+  .warning-close-button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
