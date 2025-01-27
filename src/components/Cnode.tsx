@@ -397,22 +397,7 @@ const Cnode: React.FC<CnodeProps> = ({
 
   // Add touch event handlers
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      // Handle two-finger tap as right click
-      e.preventDefault();
-      onMouseDownRight(e as any, node.id);
-      return;
-    }
-
-    setTouchStartTime(Date.now());
-    setIsTouching(true);
-
-    // Start long press timer for hover effect
-    const timer = setTimeout(() => {
-      highlightNode(node.id);
-    }, 300);
-
-    setLongPressTimer(timer);
+    e.stopPropagation();
     
     if (onTouchStart) {
       onTouchStart(e, node.id);
@@ -420,25 +405,16 @@ const Cnode: React.FC<CnodeProps> = ({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
+    e.stopPropagation();
     
-    if (isTouching && onTouchMove) {
+    if (onTouchMove) {
       onTouchMove(e, node.id);
     }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (longPressTimer) {
-      clearTimeout(longPressTimer);
-      setLongPressTimer(null);
-    }
-
-    setIsTouching(false);
-    unhighlightAll();
-
+    e.stopPropagation();
+    
     if (onTouchEnd) {
       onTouchEnd(e, node.id);
     }
@@ -466,6 +442,7 @@ const Cnode: React.FC<CnodeProps> = ({
         minHeight: simpleMode ? '60px' : '180px',
         width: simpleMode ? '180px' : '220px',
         ...style,
+        touchAction: 'none'
       }}
       onMouseEnter={() => {
         // Clear any existing timeout

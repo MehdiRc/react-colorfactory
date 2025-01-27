@@ -311,7 +311,7 @@ const Workspace: React.FC<WorkspaceProps> = ({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault(); // Prevent default refresh gesture
+    e.preventDefault();
     const touch = e.touches[0];
     const rect = workspaceRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -320,24 +320,26 @@ const Workspace: React.FC<WorkspaceProps> = ({
     const nodeElement = target.closest('.node');
     const nodeId = nodeElement?.getAttribute('data-id') || null;
 
+    const touchX = touch.clientX - rect.left;
+    const touchY = touch.clientY - rect.top;
+
     setTouchState({
-      startX: touch.clientX - rect.left,
-      startY: touch.clientY - rect.top,
-      lastX: touch.clientX - rect.left,
-      lastY: touch.clientY - rect.top,
+      startX: touchX,
+      startY: touchY,
+      lastX: touchX,
+      lastY: touchY,
       isMoving: false,
       nodeId,
       startTime: Date.now()
     });
 
     if (nodeId) {
-      // Focus/highlight the node immediately on touch
-      highlightNode(nodeId);
+      // Focus the node immediately
       updateNodeInteraction(nodeId);
-      setIsDragging(true);
       setDraggedNodeId(nodeId);
 
-      // Set up long press timer for right click
+      // Start long press timer
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = setTimeout(() => {
         if (!touchState.isMoving) {
           onMouseDownRight(e as any, nodeId);
@@ -358,17 +360,17 @@ const Workspace: React.FC<WorkspaceProps> = ({
     const deltaY = currentY - touchState.lastY;
 
     // Check if movement is significant
-    const isSignificantMove = Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5;
+    const isSignificantMove = Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3;
 
     if (isSignificantMove) {
-      // Clear long press timer if movement is significant
+      // Clear long press timer
       if (longPressTimerRef.current) {
         clearTimeout(longPressTimerRef.current);
         longPressTimerRef.current = null;
       }
 
       if (touchState.nodeId) {
-        // Move the node
+        // Move node
         setNodes(prev => prev.map(node => {
           if (node.id === touchState.nodeId) {
             return {
@@ -380,7 +382,7 @@ const Workspace: React.FC<WorkspaceProps> = ({
           return node;
         }));
       } else {
-        // Pan the workspace
+        // Pan workspace
         setNodes(prev => prev.map(node => ({
           ...node,
           x: node.x + deltaX,
@@ -406,14 +408,16 @@ const Workspace: React.FC<WorkspaceProps> = ({
       longPressTimerRef.current = null;
     }
 
-    setIsDragging(false);
-    setDraggedNodeId(null);
-    
-    // Only clear highlight if this was the last touch
-    if (e.touches.length === 0) {
-      unhighlightAll();
+    const touchDuration = Date.now() - touchState.startTime;
+
+    if (!touchState.isMoving && touchDuration < 200) {
+      // Quick tap
+      if (touchState.nodeId) {
+        highlightNode(touchState.nodeId);
+      }
     }
 
+    setDraggedNodeId(null);
     setTouchState(prev => ({
       ...prev,
       isMoving: false,
@@ -449,8 +453,9 @@ const Workspace: React.FC<WorkspaceProps> = ({
       onTouchEnd={handleTouchEnd}
       style={{ 
         cursor: isPanning ? 'grabbing' : 'default',
-        touchAction: 'none', // Prevent all browser touch actions
-        overscrollBehavior: 'none' // Prevent pull-to-refresh
+        touchAction: 'none',
+        overscrollBehavior: 'none',
+        WebkitOverflowScrolling: 'touch'
       }}
       className={`
         ${!linksVisible ? 'links-hidden' : ''} 
