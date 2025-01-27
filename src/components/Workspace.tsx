@@ -37,6 +37,15 @@ interface WorkspaceProps {
   setUndoStack: React.Dispatch<React.SetStateAction<UndoAction[]>>;
 }
 
+interface TouchState {
+  startX: number;
+  startY: number;
+  lastX: number;
+  lastY: number;
+  isMoving: boolean;
+  nodeId: string | null;
+}
+
 const Workspace: React.FC<WorkspaceProps> = ({
   workspaceRef,
   onWorkspaceMouseDown,
@@ -93,6 +102,15 @@ const Workspace: React.FC<WorkspaceProps> = ({
 
   // Add state to track the last dragged node
   const [lastDraggedNodeId, setLastDraggedNodeId] = useState<string | null>(null);
+
+  const [touchState, setTouchState] = useState<TouchState>({
+    startX: 0,
+    startY: 0,
+    lastX: 0,
+    lastY: 0,
+    isMoving: false,
+    nodeId: null
+  });
 
   // Add this effect to update workspace size
   React.useEffect(() => {
@@ -287,6 +305,81 @@ const Workspace: React.FC<WorkspaceProps> = ({
     }
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const rect = workspaceRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const target = e.target as HTMLElement;
+    const nodeElement = target.closest('.node');
+    const nodeId = nodeElement?.getAttribute('data-id') || null;
+
+    setTouchState({
+      startX: touch.clientX - rect.left,
+      startY: touch.clientY - rect.top,
+      lastX: touch.clientX - rect.left,
+      lastY: touch.clientY - rect.top,
+      isMoving: false,
+      nodeId
+    });
+
+    if (nodeId) {
+      updateNodeInteraction(nodeId);
+      setIsDragging(true);
+      setDraggedNodeId(nodeId);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = workspaceRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const currentX = touch.clientX - rect.left;
+    const currentY = touch.clientY - rect.top;
+    const deltaX = currentX - touchState.lastX;
+    const deltaY = currentY - touchState.lastY;
+
+    if (touchState.nodeId) {
+      // Move the node
+      setNodes(prev => prev.map(node => {
+        if (node.id === touchState.nodeId) {
+          return {
+            ...node,
+            x: node.x + deltaX,
+            y: node.y + deltaY
+          };
+        }
+        return node;
+      }));
+    } else {
+      // Pan the workspace
+      setNodes(prev => prev.map(node => ({
+        ...node,
+        x: node.x + deltaX,
+        y: node.y + deltaY
+      })));
+    }
+
+    setTouchState(prev => ({
+      ...prev,
+      lastX: currentX,
+      lastY: currentY,
+      isMoving: true
+    }));
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    setIsDragging(false);
+    setDraggedNodeId(null);
+    setTouchState(prev => ({
+      ...prev,
+      isMoving: false,
+      nodeId: null
+    }));
+  };
+
   // Sort nodes by lastInteracted time before rendering
   const sortedNodes = [...nodes].sort((a, b) => {
     const timeA = a.lastInteracted || 0;
@@ -301,7 +394,13 @@ const Workspace: React.FC<WorkspaceProps> = ({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      style={{ cursor: isPanning ? 'grabbing' : 'default' }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{ 
+        cursor: isPanning ? 'grabbing' : 'default',
+        touchAction: 'none' // Prevent browser touch actions
+      }}
       className={`
         ${!linksVisible ? 'links-hidden' : ''} 
         ${isDraggingOver ? 'dragging-over' : ''} 

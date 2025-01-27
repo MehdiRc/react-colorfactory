@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Node } from "../types";
 import "./Cnode.css";
 
@@ -24,6 +24,9 @@ interface CnodeProps {
   darknessPercentage: number;
   style?: React.CSSProperties;
   isDragging: boolean;
+  onTouchStart?: (e: React.TouchEvent, id: string) => void;
+  onTouchMove?: (e: React.TouchEvent, id: string) => void;
+  onTouchEnd?: (e: React.TouchEvent, id: string) => void;
 }
 
 // Helper function to lighten a hex color by percentage
@@ -193,6 +196,9 @@ const Cnode: React.FC<CnodeProps> = ({
   darknessPercentage,
   style,
   isDragging,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
 }) => {
   const opacity = getNodeOpacity(node.id);
 
@@ -384,6 +390,69 @@ const Cnode: React.FC<CnodeProps> = ({
     changeNodeColor(node.id, newHex, true, oldColor);
   };
 
+  // Add touch handling state
+  const [touchStartTime, setTouchStartTime] = useState<number>(0);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isTouching, setIsTouching] = useState(false);
+
+  // Add touch event handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      // Handle two-finger tap as right click
+      e.preventDefault();
+      onMouseDownRight(e as any, node.id);
+      return;
+    }
+
+    setTouchStartTime(Date.now());
+    setIsTouching(true);
+
+    // Start long press timer for hover effect
+    const timer = setTimeout(() => {
+      highlightNode(node.id);
+    }, 300);
+
+    setLongPressTimer(timer);
+    
+    if (onTouchStart) {
+      onTouchStart(e, node.id);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+    
+    if (isTouching && onTouchMove) {
+      onTouchMove(e, node.id);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+
+    setIsTouching(false);
+    unhighlightAll();
+
+    if (onTouchEnd) {
+      onTouchEnd(e, node.id);
+    }
+  };
+
+  // Add cleanup effect
+  useEffect(() => {
+    return () => {
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+      }
+    };
+  }, [longPressTimer]);
+
   return (
     <div
       key={node.id}
@@ -426,6 +495,9 @@ const Cnode: React.FC<CnodeProps> = ({
         onMouseDownNode(e, node.id);
       }}
       onContextMenu={(e) => onMouseDownRight(e, node.id)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <div className="node-header">
         <input
