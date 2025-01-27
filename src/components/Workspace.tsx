@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Cnode from "./Cnode";
 import ConnectionsLayer from "./ConnectionsLayer";
 import { Node, Connection, DraggingLine, UndoAction } from "../types";
@@ -44,6 +44,7 @@ interface TouchState {
   lastY: number;
   isMoving: boolean;
   nodeId: string | null;
+  startTime: number;
 }
 
 const Workspace: React.FC<WorkspaceProps> = ({
@@ -109,8 +110,12 @@ const Workspace: React.FC<WorkspaceProps> = ({
     lastX: 0,
     lastY: 0,
     isMoving: false,
-    nodeId: null
+    nodeId: null,
+    startTime: 0
   });
+
+  // Add long press timer ref
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Add this effect to update workspace size
   React.useEffect(() => {
@@ -306,6 +311,7 @@ const Workspace: React.FC<WorkspaceProps> = ({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault(); // Prevent default refresh gesture
     const touch = e.touches[0];
     const rect = workspaceRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -320,13 +326,23 @@ const Workspace: React.FC<WorkspaceProps> = ({
       lastX: touch.clientX - rect.left,
       lastY: touch.clientY - rect.top,
       isMoving: false,
-      nodeId
+      nodeId,
+      startTime: Date.now()
     });
 
     if (nodeId) {
+      // Focus/highlight the node immediately on touch
+      highlightNode(nodeId);
       updateNodeInteraction(nodeId);
       setIsDragging(true);
       setDraggedNodeId(nodeId);
+
+      // Set up long press timer for right click
+      longPressTimerRef.current = setTimeout(() => {
+        if (!touchState.isMoving) {
+          onMouseDownRight(e as any, nodeId);
+        }
+      }, 500);
     }
   };
 
@@ -341,44 +357,78 @@ const Workspace: React.FC<WorkspaceProps> = ({
     const deltaX = currentX - touchState.lastX;
     const deltaY = currentY - touchState.lastY;
 
-    if (touchState.nodeId) {
-      // Move the node
-      setNodes(prev => prev.map(node => {
-        if (node.id === touchState.nodeId) {
-          return {
-            ...node,
-            x: node.x + deltaX,
-            y: node.y + deltaY
-          };
-        }
-        return node;
-      }));
-    } else {
-      // Pan the workspace
-      setNodes(prev => prev.map(node => ({
-        ...node,
-        x: node.x + deltaX,
-        y: node.y + deltaY
-      })));
-    }
+    // Check if movement is significant
+    const isSignificantMove = Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5;
 
-    setTouchState(prev => ({
-      ...prev,
-      lastX: currentX,
-      lastY: currentY,
-      isMoving: true
-    }));
+    if (isSignificantMove) {
+      // Clear long press timer if movement is significant
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+
+      if (touchState.nodeId) {
+        // Move the node
+        setNodes(prev => prev.map(node => {
+          if (node.id === touchState.nodeId) {
+            return {
+              ...node,
+              x: node.x + deltaX,
+              y: node.y + deltaY
+            };
+          }
+          return node;
+        }));
+      } else {
+        // Pan the workspace
+        setNodes(prev => prev.map(node => ({
+          ...node,
+          x: node.x + deltaX,
+          y: node.y + deltaY
+        })));
+      }
+
+      setTouchState(prev => ({
+        ...prev,
+        lastX: currentX,
+        lastY: currentY,
+        isMoving: true
+      }));
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    
+    // Clear long press timer
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+
     setIsDragging(false);
     setDraggedNodeId(null);
+    
+    // Only clear highlight if this was the last touch
+    if (e.touches.length === 0) {
+      unhighlightAll();
+    }
+
     setTouchState(prev => ({
       ...prev,
       isMoving: false,
       nodeId: null
     }));
   };
+
+  // Add cleanup effect for long press timer
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+    };
+  }, []);
 
   // Sort nodes by lastInteracted time before rendering
   const sortedNodes = [...nodes].sort((a, b) => {
@@ -399,7 +449,8 @@ const Workspace: React.FC<WorkspaceProps> = ({
       onTouchEnd={handleTouchEnd}
       style={{ 
         cursor: isPanning ? 'grabbing' : 'default',
-        touchAction: 'none' // Prevent browser touch actions
+        touchAction: 'none', // Prevent all browser touch actions
+        overscrollBehavior: 'none' // Prevent pull-to-refresh
       }}
       className={`
         ${!linksVisible ? 'links-hidden' : ''} 
