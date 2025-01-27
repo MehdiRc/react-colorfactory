@@ -65,7 +65,7 @@ const TopBar: React.FC<TopBarProps> = ({
           <input
             type="file"
             id="fileInput"
-            accept="image/*,.txt,.css,.html,.js,.json"
+            accept="image/*,text/*,.html,.css,.js,.json,.md,.txt,.svg"
             onChange={handleFileInput}
           />
         </div>

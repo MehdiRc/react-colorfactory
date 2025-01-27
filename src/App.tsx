@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
 
 import Cnode from "./components/Cnode";
 import TopBar from "./components/TopBar";
@@ -851,127 +852,53 @@ function App() {
   /*****************************************************
    * File Input (text or image => K-means)
    *****************************************************/
-  const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     const file = files[0];
     const extension = file.name.split('.').pop()?.toLowerCase();
 
-    if (extension === 'txt') {
-      const text = await file.text();
-      const hexColors = text.match(/#[0-9A-Fa-f]{6}/g) || [];
-      
-      // Create nodes first
-      const newNodeIds: string[] = [];
-      const newNodes: Node[] = [];
-      
-      hexColors.forEach((hexColor) => {
-        const alreadyExists = nodes.some(
-          (n) => n.color.toLowerCase() === hexColor.toLowerCase()
-        );
-        if (!alreadyExists) {
-          const id = `node-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          newNodeIds.push(id);
-          
-          const newNode: Node = {
-            id,
-            x: 0,
-            y: 0,
-            color: hexColor,
-            title: `Color ${hexColor}`,
-            connections: [], // Initialize empty connections array
-          };
-          newNodes.push(newNode);
-        }
-      });
-
-      // Calculate optimal positions
-      if (workspaceRef.current && newNodes.length > 0) {
-        const rect = workspaceRef.current.getBoundingClientRect();
-        const width = rect.width;
-        const height = rect.height;
-
-        const positions = calculateLayout(
-          newNodes,
-          [], // Empty connections for layout
-          width,
-          height
-        );
-
-        // Update node positions
-        newNodes.forEach(node => {
-          const pos = positions[node.id];
-          node.x = pos.x;
-          node.y = pos.y;
-        });
-
-        // Create all connections
-        const allNewConnections: Connection[] = [];
-        const updatedNodes = [...nodes]; // Copy existing nodes
-
-        // Connect new nodes among themselves
-        for (let i = 0; i < newNodes.length; i++) {
-          for (let j = i + 1; j < newNodes.length; j++) {
-            const connection: Connection = {
-              fromId: newNodes[i].id,
-              toId: newNodes[j].id
-            };
-            allNewConnections.push(connection);
-            
-            // Add connection to both nodes
-            newNodes[i].connections.push({...connection});
-            newNodes[j].connections.push({...connection});
-          }
-        }
-
-        // Connect new nodes to existing nodes
-        newNodes.forEach(newNode => {
-          updatedNodes.forEach(existingNode => {
-            const connection: Connection = {
-              fromId: newNode.id,
-              toId: existingNode.id
-            };
-            allNewConnections.push(connection);
-            
-            // Add connection to both nodes
-            newNode.connections.push({...connection});
-            existingNode.connections.push({...connection});
-          });
-        });
-
-        // Update state
-        setNodes([...updatedNodes, ...newNodes]);
-        setConnections(prev => [...prev, ...allNewConnections]);
-        setNodeCount(prev => prev + newNodes.length);
-
-        // Add to undo stack
-        newNodes.forEach(node => {
-          setUndoStack(prev => [...prev, { 
-            type: "ADD_NODE", 
-            nodeId: node.id,
-            nodeData: node
-          }]);
-        });
-      }
-    } else if (extension === 'png' || extension === 'jpg' || extension === 'jpeg') {
+    // Check if it's an image file
+    if (extension && /^(png|jpe?g|gif|bmp|webp|svg)$/.test(extension)) {
       setPendingImageFile(file);
       setPreviewModalOpen(true);
+    } 
+    // Handle text files
+    else if (extension) {
+      handleTextFile(file);
     }
 
     // Clear the input
     e.target.value = '';
-  };
+  }
 
   function handleTextFile(file: File): void {
     const reader = new FileReader();
     reader.onload = (event: ProgressEvent<FileReader>) => {
       const text = event.target?.result as string;
-      const colorRegex = /#[0-9A-Fa-f]{6}\b/g;
-      const matches = [...new Set(text.match(colorRegex) || [])];
+      // Updated regex to match more color formats
+      const colorRegex = /#[0-9A-Fa-f]{6}\b|#[0-9A-Fa-f]{3}\b|rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)|rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*[\d.]+\s*\)/g;
+      const matches = text.match(colorRegex) || [];
+      
+      // Convert all matches to hex format
+      const hexColors = [...new Set(matches.map(color => {
+        if (color.startsWith('#')) {
+          // Convert 3-digit hex to 6-digit hex
+          if (color.length === 4) {
+            return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`;
+          }
+          return color.toUpperCase();
+        } else if (color.startsWith('rgb')) {
+          // Convert rgb/rgba to hex
+          const [r, g, b] = color.match(/\d+/g)!.map(Number);
+          return `#${[r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+        }
+        return color;
+      }))];
 
       // Reset nodes if too many to prevent overcrowding
-      if (matches.length > 50) {
+      if (hexColors.length > 50) {
         setNodes([]);
         setConnections([]);
         setNodeCount(0);
@@ -979,7 +906,7 @@ function App() {
 
       // Create nodes first
       const newNodeIds: string[] = [];
-      matches.forEach((hexColor) => {
+      hexColors.forEach((hexColor) => {
         const alreadyExists = nodes.some(
           (n) => n.color.toLowerCase() === hexColor.toLowerCase()
         );
@@ -989,26 +916,15 @@ function App() {
         }
       });
 
-      // Calculate optimal positions
+      // Calculate optimal positions and create nodes
       if (workspaceRef.current && newNodeIds.length > 0) {
         const rect = workspaceRef.current.getBoundingClientRect();
         const width = rect.width;
         const height = rect.height;
 
-        // Create temporary connections for layout
-        const tempConnections = [];
-        for (let i = 0; i < newNodeIds.length; i++) {
-          for (let j = i + 1; j < newNodeIds.length; j++) {
-            tempConnections.push({
-              fromId: newNodeIds[i],
-              toId: newNodeIds[j]
-            });
-          }
-        }
-
         const positions = calculateLayout(
           newNodeIds.map(id => ({ id })),
-          tempConnections,
+          [], // Empty connections for layout
           width,
           height
         );
@@ -1020,8 +936,8 @@ function App() {
             id,
             x: pos.x,
             y: pos.y,
-            color: matches[index],
-            title: `Color ${matches[index]}`,
+            color: hexColors[index],
+            title: `Color ${hexColors[index]}`,
             connections: [],
           };
           setNodes(prev => [...prev, newNode]);
@@ -1452,6 +1368,19 @@ function App() {
         x={mousePos.x}
         y={mousePos.y}
       />
+
+      <div className="floating-footer">
+        <span>Made by</span>
+        <a 
+          href="https://www.linkedin.com/in/mehdi-chakhchoukh-ba2579228/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="linkedin-link"
+        >
+          Mehdi Chakchoukh
+          <LinkedInIcon sx={{ fontSize: 16, opacity: 0.8 }} />
+        </a>
+      </div>
     </div>
   );
 }

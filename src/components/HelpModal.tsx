@@ -31,7 +31,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <li><strong>Connect Nodes:</strong> Right-click drag between nodes to create a connection</li>
             <li><strong>Copy Color:</strong> Click on any color square (original, light, or dark variant)</li>
             <li><strong>Preview Colors:</strong> Hover over color squares to preview the effect</li>
-            <li><strong>Auto Highlight:</strong> Hover over a node for 3 seconds to highlight connections</li>
+            <li><strong>Auto Highlight:</strong> Hover over a node for 2 seconds to highlight connections</li>
           </ul>
         </div>
 
@@ -59,7 +59,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
         <div className="help-section">
           <h3>Settings & Modes</h3>
           <ul>
-            <li><strong>Simple Mode:</strong> Toggle between simple and advanced node views</li>
+            <li><strong>Simple Mode:</strong> Toggle between simple (presentation) and advanced (editing) node views</li>
             <li><strong>Dark Mode:</strong> Switch between light and dark interface themes</li>
             <li><strong>Contrast Check:</strong> Adjust minimum contrast ratio for connections</li>
             <li><strong>Visibility:</strong> Toggle connection lines and hover effects</li>

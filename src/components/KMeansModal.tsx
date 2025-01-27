@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 interface KMeansModalProps {
   previewModalOpen: boolean;
@@ -19,6 +19,13 @@ const KMeansModal: React.FC<KMeansModalProps> = ({
   doKmeansPreview,
   addColorsFromPreview,
 }) => {
+  // Only run preview when modal opens
+  useEffect(() => {
+    if (previewModalOpen && pendingImageFile) {
+      doKmeansPreview(pendingImageFile, modalMaxColors);
+    }
+  }, [previewModalOpen]); // Only depend on previewModalOpen
+
   if (!previewModalOpen) return null;
 
   return (

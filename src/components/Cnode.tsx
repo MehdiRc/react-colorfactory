@@ -342,6 +342,48 @@ const Cnode: React.FC<CnodeProps> = ({
     };
   }, []);
 
+  // Helper function to convert HSV to RGB for gradient
+  const hsvToRgbString = (h: number, s: number, v: number) => {
+    const [r, g, b] = hsvToRgb(h, s, v);
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  // Create gradient backgrounds for HSV sliders
+  const saturationGradient = `linear-gradient(to right, 
+    ${hsvToRgbString(displayH, 0, displayV)}, 
+    ${hsvToRgbString(displayH, 100, displayV)}
+  )`;
+
+  const valueGradient = `linear-gradient(to right, 
+    ${hsvToRgbString(displayH, displayS, 0)}, 
+    ${hsvToRgbString(displayH, displayS, 100)}
+  )`;
+
+  // Update the hue slider handler
+  const handleHueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let newH = parseInt(e.target.value);
+    // Ensure hue stays within 0-360 range
+    newH = newH === 360 ? 359 : newH; // Prevent 360 which can cause issues
+    
+    // Use 10 for S and V when they are 0 to maintain hue visibility
+    const effectiveS = displayS || 10;
+    const effectiveV = displayV || 10;
+    const [newR, newG, newB] = hsvToRgb(newH, effectiveS, effectiveV);
+    const newHex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+    changeNodeColor(node.id, newHex, false);
+  };
+
+  // Update the mouseUp handler for hue as well
+  const handleHueMouseUp = (e: React.MouseEvent<HTMLInputElement>) => {
+    const oldColor = colorBeforeDragRef.current[node.id];
+    let newH = parseInt((e.target as HTMLInputElement).value);
+    newH = newH === 360 ? 359 : newH; // Same protection here
+    
+    const [newR, newG, newB] = hsvToRgb(newH, displayS, displayV);
+    const newHex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+    changeNodeColor(node.id, newHex, true, oldColor);
+  };
+
   return (
     <div
       key={node.id}
@@ -364,7 +406,7 @@ const Cnode: React.FC<CnodeProps> = ({
         // Set new timeout for 2 seconds
         highlightTimeoutRef.current = setTimeout(() => {
           highlightNode(node.id);
-        }, 3000);
+        }, 2000);
       }}
       onMouseLeave={() => {
         // Clear the timeout when mouse leaves
@@ -409,55 +451,36 @@ const Cnode: React.FC<CnodeProps> = ({
               <label>H</label>
               <input
                 type="range"
-                min="0"
-                max="360"
-                value={displayH}
                 className="slider hue-slider"
-                readOnly={!!hoveredColor}
+                min="0"
+                max="359"
+                value={displayH}
+                onChange={handleHueChange}
                 onMouseDown={() => {
                   colorBeforeDragRef.current[node.id] = node.color;
                 }}
-                onChange={(e) => {
-                  const newH = parseInt(e.target.value);
-                  // Keep current s and v values when changing hue
-                  const [newR, newG, newB] = hsvToRgb(newH, displayS, displayV);
-                  const newHex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
-                  changeNodeColor(node.id, newHex, false);
-                }}
-                onMouseUp={(e: any) => {
-                  const oldColor = colorBeforeDragRef.current[node.id];
-                  const newH = parseInt(e.target.value);
-                  const [newR, newG, newB] = hsvToRgb(newH, displayS, displayV);
-                  const newHex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
-                  changeNodeColor(node.id, newHex, true, oldColor);
-                }}
+                onMouseUp={handleHueMouseUp}
               />
-              <span className="value">{displayH}°</span>
+              <span className="value">{Math.round(displayH)}°</span>
             </div>
 
             <div className="color-slider">
               <label>S</label>
               <input
                 type="range"
+                className="slider saturation-slider"
                 min="0"
                 max="100"
                 value={displayS}
-                className="slider saturation-slider"
-                style={{
-                  background: `linear-gradient(to right, 
-                    #${hsvToRgb(displayH, 0, displayV).map(c => c.toString(16).padStart(2, '0')).join('')},
-                    #${hsvToRgb(displayH, 100, displayV).map(c => c.toString(16).padStart(2, '0')).join('')}
-                  )`
-                }}
-                onMouseDown={() => {
-                  colorBeforeDragRef.current[node.id] = node.color;
-                }}
+                style={{ background: saturationGradient }}
                 onChange={(e) => {
                   const newS = parseInt(e.target.value);
-                  // Keep current h and v values when changing saturation
                   const [newR, newG, newB] = hsvToRgb(displayH, newS, displayV);
                   const newHex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
                   changeNodeColor(node.id, newHex, false);
+                }}
+                onMouseDown={() => {
+                  colorBeforeDragRef.current[node.id] = node.color;
                 }}
                 onMouseUp={(e: any) => {
                   const oldColor = colorBeforeDragRef.current[node.id];
@@ -467,32 +490,26 @@ const Cnode: React.FC<CnodeProps> = ({
                   changeNodeColor(node.id, newHex, true, oldColor);
                 }}
               />
-              <span className="value">{displayS}%</span>
+              <span className="value">{Math.round(displayS)}%</span>
             </div>
 
             <div className="color-slider">
               <label>V</label>
               <input
                 type="range"
+                className="slider value-slider"
                 min="0"
                 max="100"
                 value={displayV}
-                className="slider value-slider"
-                style={{
-                  background: `linear-gradient(to right, 
-                    #000000,
-                    #${hsvToRgb(displayH, displayS, 100).map(c => c.toString(16).padStart(2, '0')).join('')}
-                  )`
-                }}
-                onMouseDown={() => {
-                  colorBeforeDragRef.current[node.id] = node.color;
-                }}
+                style={{ background: valueGradient }}
                 onChange={(e) => {
                   const newV = parseInt(e.target.value);
-                  // Keep current h and s values when changing value
                   const [newR, newG, newB] = hsvToRgb(displayH, displayS, newV);
                   const newHex = `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
                   changeNodeColor(node.id, newHex, false);
+                }}
+                onMouseDown={() => {
+                  colorBeforeDragRef.current[node.id] = node.color;
                 }}
                 onMouseUp={(e: any) => {
                   const oldColor = colorBeforeDragRef.current[node.id];
@@ -502,7 +519,7 @@ const Cnode: React.FC<CnodeProps> = ({
                   changeNodeColor(node.id, newHex, true, oldColor);
                 }}
               />
-              <span className="value">{displayV}%</span>
+              <span className="value">{Math.round(displayV)}%</span>
             </div>
           </div>
 
@@ -518,8 +535,8 @@ const Cnode: React.FC<CnodeProps> = ({
                 readOnly={!!hoveredColor}
                 style={{
                   background: `linear-gradient(to right, 
-                    #${0..toString(16).padStart(2, '0')}${displayG.toString(16).padStart(2, '0')}${displayB.toString(16).padStart(2, '0')},
-                    #${255..toString(16).padStart(2, '0')}${displayG.toString(16).padStart(2, '0')}${displayB.toString(16).padStart(2, '0')}
+                    rgb(0, ${displayG}, ${displayB}),
+                    rgb(255, ${displayG}, ${displayB})
                   )`
                 }}
                 onMouseDown={() => {
@@ -558,10 +575,11 @@ const Cnode: React.FC<CnodeProps> = ({
                 max="255"
                 value={displayG}
                 className="slider green-slider"
+                readOnly={!!hoveredColor}
                 style={{
                   background: `linear-gradient(to right, 
-                    #${displayR.toString(16).padStart(2, '0')}${0..toString(16).padStart(2, '0')}${displayB.toString(16).padStart(2, '0')},
-                    #${displayR.toString(16).padStart(2, '0')}${255..toString(16).padStart(2, '0')}${displayB.toString(16).padStart(2, '0')}
+                    rgb(${displayR}, 0, ${displayB}),
+                    rgb(${displayR}, 255, ${displayB})
                   )`
                 }}
                 onMouseDown={() => {
@@ -600,10 +618,11 @@ const Cnode: React.FC<CnodeProps> = ({
                 max="255"
                 value={displayB}
                 className="slider blue-slider"
+                readOnly={!!hoveredColor}
                 style={{
                   background: `linear-gradient(to right, 
-                    #${displayR.toString(16).padStart(2, '0')}${displayG.toString(16).padStart(2, '0')}${0..toString(16).padStart(2, '0')},
-                    #${displayR.toString(16).padStart(2, '0')}${displayG.toString(16).padStart(2, '0')}${255..toString(16).padStart(2, '0')}
+                    rgb(${displayR}, ${displayG}, 0),
+                    rgb(${displayR}, ${displayG}, 255)
                   )`
                 }}
                 onMouseDown={() => {
