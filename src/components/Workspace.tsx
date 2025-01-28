@@ -411,7 +411,7 @@ const Workspace: React.FC<WorkspaceProps> = ({
         <div className="mobile-warning-overlay">
           <div className="mobile-warning-content">
             <h3>Desktop Only Tool</h3>
-            <p>This color tool is designed for desktop use with a mouse. Touch input is not fully supported.</p>
+            <p>This tool is designed for desktop use with a mouse. Touch input (on phone) is not supported yet.</p>
             <button 
               onClick={() => setShowMobileWarning(false)}
               className="warning-close-button"
