@@ -336,7 +336,7 @@ const Workspace: React.FC<WorkspaceProps> = ({
         <div className="empty-workspace">
           <div className="empty-message">
             <span>Empty Workspace</span>
-            <small>Add nodes using the "Add Node" button or drag files here</small>
+            <small>Add nodes using the "Add Node +" button or drag files here</small>
           </div>
         </div>
       )}
