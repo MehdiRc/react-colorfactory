@@ -4,6 +4,12 @@
 
 A powerful, interactive color palette creation and management tool built with React and TypeScript.
 
+## Try It Live
+
+**[Try Color Factory Now →](https://colorlab.mehdirc.com/)**
+
+Experience the full functionality of Color Factory without installation - create, analyze and export color palettes directly in your browser.
+
 ## Features
 
 - **Interactive Color Node System**: Create, connect, and organize color nodes to build beautiful color palettes
